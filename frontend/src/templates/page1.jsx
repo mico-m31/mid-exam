@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, CircleX} from "lucide-react";
 import Button from "@mui/material/Button";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
@@ -25,7 +25,7 @@ function DataCard({ data }) {
 }
 
 export default function Page1() {
-  const [isOpen, Closed] = useState("");
+  const [isOpen, setOpen] = useState();
 
   const date = useRef();
   const income = useRef();
@@ -76,9 +76,13 @@ export default function Page1() {
       <div>
         <ul className="text-black grid grid-cols-4 p-4 text-center"></ul>
       </div>
-      <div className="flex justify-center mt-[50px] hidden">
+      <div className={`flex justify-center mt-[50px] ${isOpen ? "" : "hidden"}` }>
         <div className="border-1 rounded-lg p-4 w-1/4 flex justify-center ">
           <form onSubmit={handleSubmit} className="flex flex-col p-4">
+            <button className="cursor-pointer"
+            onClick={() => setOpen(false)}>
+            <CircleX size={24} />
+            </button>
             <label className="p-2">
               Date:
               <input
@@ -130,7 +134,9 @@ export default function Page1() {
           </form>
         </div>
       </div>
-      <button className="w-17 h-17 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 cursor-pointer fixed top-164 left-354">
+      <button className={`w-17 h-17 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 cursor-pointer fixed top-164 left-354 ${isOpen ? "hidden" : ""}`}
+      onClick={() => setOpen(true)}      
+      >
         <Plus size={34} /> 
       </button>
     </div>
