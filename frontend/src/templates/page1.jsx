@@ -1,31 +1,45 @@
-import React, { useRef, useState } from "react";
-import { Plus, CircleX} from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Plus, CircleX } from "lucide-react";
 import Button from "@mui/material/Button";
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
-import FormControl from "@mui/material/FormControl";
-import Select from "@mui/material/Select";
-import TextField from "@mui/material/TextField";
-
-function DataCard({ data }) {
-  return (
-    <>
-      {data.map((item, index) => (
-        <React.Fragment key={index}>
-          <div>
-            <li>{item.date}</li>
-            <li>{item.income}</li>
-            <li>{item.expense}</li>
-            <li>{item.total}</li>
-          </div>
-        </React.Fragment>
-      ))}
-    </>
-  );
-}
 
 export default function Page1() {
+  function DataCard({ data, onDelete }) {
+    return (
+      <>
+        {data.map((item) => (
+          <div key={item.Id} className="grid grid-cols-4 text-center p-4">
+            <div className="bg-white p-2 m-2 rounded-md  flex">
+              <Button
+                variant="outlined"
+                type="submit "
+                className="flex-none"
+                onClick={() => onDelete(item.id)}
+              >
+                del
+              </Button>
+              <Button variant="outlined" type="submit" className="flex-none">
+                edit
+              </Button>
+
+              <p className="grow mt-[6px]"> {item.date}</p>
+            </div>
+            <div className="text-black bg-white p-2 m-2 rounded-md">
+              Rp {parseInt(item.income).toLocaleString("id-ID")}
+            </div>
+            <div className="text-black bg-white p-2 m-2 rounded-md">
+              Rp {parseInt(item.expense).toLocaleString("id-ID")}
+            </div>
+            <div className="bg-white p-2 m-2 rounded-md">
+              Rp {parseInt(item.income) - parseInt(item.expense).toLocaleString("id-ID")}
+            </div>
+          </div>
+        ))}
+      </>
+    );
+  }
+
   const [isOpen, setOpen] = useState();
+  const [data, setData] = useState([]);
 
   const date = useRef();
   const income = useRef();
@@ -55,34 +69,73 @@ export default function Page1() {
       .then((result) => {
         console.log("Data sent successfully:", result);
         alert("data submitted!");
+        setOpen(false);
       })
       .catch((err) => {
         console.error("Error sending data:", err);
       });
   };
+
+  useEffect(() => {
+    fetch("http://localhost:8080/api/getData")
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("getting data", data);
+        setData(data);
+      })
+      .catch((err) => {
+        console.error("error getting data :", err);
+      });
+  }, []);
+
+  const handleDelete = (id) => {
+    fetch("http://localhost:8080/api/deleteData", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id: id }),
+    })
+      .then((res) => res.json())
+      .then((result) => {
+        console.log("Deleted:", result);
+        setData((prevData) => prevData.filter((item) => item.id !== id));
+      })
+      .catch((err) => {
+        console.error("Delete failed:", err);
+      });
+  };
   return (
     <div>
-      <ul className="text-black grid grid-cols-4 p-2 text-center">
-        <li className="p-4 mt-[-5px] ">Date</li>
-        <li className="p-4 text-blue">Income</li>
-        <li className="p-4 text-red">Expense</li>
-        <li className="p-4">Total</li>
-        <li></li>
-        <li>Rp </li>
-        <li>Rp </li>
-        <li>Rp </li>
+      <ul className="text-black grid grid-cols-3 p-2 text-center">
+        <li className="p-4 text-green-400">Income</li>
+        <li className="p-4 text-red-400">Expense</li>
+        <li className="p-4 text-blue-400">Total</li>
+        <li className="text-green-400">Rp 1000</li>
+        <li className="text-red-400">Rp 1000</li>
+        <li className="text-blue-400">Rp 1000</li>
       </ul>
       <hr></hr>
       <div>
-        <ul className="text-black grid grid-cols-4 p-4 text-center"></ul>
+        <div>
+          <div className="bg-white grid grid-cols-4 text-center font-bold">
+            <div>Date</div>
+            <div className="text-blue">Income</div>
+            <div className="text-red">Expense</div>
+            <div>Total</div>
+          </div>
+          <hr />
+          <DataCard data={data} onDelete={handleDelete} />
+        </div>
       </div>
-      <div className={`flex justify-center mt-[50px] ${isOpen ? "" : "hidden"}` }>
-        <div className="border-1 rounded-lg p-4 w-1/4 flex justify-center ">
-          <form onSubmit={handleSubmit} className="flex flex-col p-4">
-            <button className="cursor-pointer"
-            onClick={() => setOpen(false)}>
+      <div
+        className={`flex justify-center mt-[50px] ${isOpen ? "" : "hidden"}`}
+      >
+        <div className="bg-white border-1 rounded-lg p-4 w-1/4 flex justify-center ">
+          <button className="cursor-pointer" onClick={() => setOpen(false)}>
             <CircleX size={24} />
-            </button>
+          </button>
+          <form onSubmit={handleSubmit} className="flex flex-col p-4">
             <label className="p-2">
               Date:
               <input
@@ -92,52 +145,31 @@ export default function Page1() {
               ></input>
             </label>
             <label className="p-2">
-              Income:
-              <TextField
-                id="standard-basic"
-                label="Standard"
-                variant="standard"
-                ref={income}
-              />
+              <input type="text" ref={income}></input>
             </label>
             <label className="p-2">
               Expense
-              <TextField
-                id="standard-basic"
-                label="Standard"
-                variant="standard"
-                ref={expense}
-              />
+              <input type="text" ref={expense}></input>
             </label>
             Category:
-            <FormControl fullWidth>
-              <InputLabel id="demo-simple-select-label" ref={category}>
-                Age
-              </InputLabel>
-              <Select
-                labelId="demo-simple-select-label"
-                id="demo-simple-select"
-                value=""
-                label="Age"
-                onChange=""
-              >
-                <MenuItem value={10}>Ten</MenuItem>
-                <MenuItem value={20}>Twenty</MenuItem>
-                <MenuItem value={30}>Thirty</MenuItem>
-              </Select>
-            </FormControl>
+            <input type="text" ref={category}></input>
             <label className="p-2">
               Note
               <input type="text" className="border" ref={note}></input>
             </label>
-            <Button variant="outlined">Submit</Button>
+            <Button variant="outlined" type="submit">
+              Submit
+            </Button>
           </form>
         </div>
       </div>
-      <button className={`w-17 h-17 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 cursor-pointer fixed top-164 left-354 ${isOpen ? "hidden" : ""}`}
-      onClick={() => setOpen(true)}      
+      <button
+        className={`w-17 h-17 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 cursor-pointer fixed top-164 left-354 ${
+          isOpen ? "hidden" : ""
+        }`}
+        onClick={() => setOpen(true)}
       >
-        <Plus size={34} /> 
+        <Plus size={34} />
       </button>
     </div>
   );

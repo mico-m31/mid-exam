@@ -32,7 +32,7 @@ function App() {
 
   return (
     <Router>
-      <div className="bg-white min-h-screen">
+      <div className="bg-black min-h-screen">
         <Sidebar
           isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={setIsSidebarOpen}
