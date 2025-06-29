@@ -130,8 +130,24 @@ func getData(w http.ResponseWriter, r *http.Request){
 func handleDelete(w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Methods", "DELETE")
 
+	var id DailyData
+	err := json.NewDecoder(r.Body).Decode(&id)
+	if err != nil{
+		log.Print(err)
+	}
 
+	_,err = db.Exec("DELETE  FROM daily_data WHERE id=$1",id.Id)
+	if err != nil{
+		log.Print(err)
+	}
+
+	response := Response{
+		Success: true,
+		Message: "data delete successfully",
+	} 
+	json.NewEncoder(w).Encode(response)
 }
 
 func main(){
