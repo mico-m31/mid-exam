@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Page1 from "./templates/page1";
 import Page2 from "./templates/page2";
 
-function Sidebar() {
+function Navbar() {
   return (
     <>
       <div className="p-2 bg-white border-b border-neutral-200">
@@ -28,14 +28,13 @@ function Sidebar() {
 }
 
 function App() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
 
   return (
     <Router>
       <div className="bg-black min-h-screen">
-        <Sidebar
-          isSidebarOpen={isSidebarOpen}
-          setIsSidebarOpen={setIsSidebarOpen}
+        <Navbar
+    
         />
 
         <Routes>
@@ -43,8 +42,6 @@ function App() {
             path="/"
             element={
               <Page1
-                isSidebarOpen={isSidebarOpen}
-                setIsSidebarOpen={setIsSidebarOpen}
               />
             }
           />

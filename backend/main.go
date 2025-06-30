@@ -17,6 +17,12 @@ type DailyData struct {
 	Note string `json:"note"`
 }
 
+type totalData struct{
+	TotalIncome float64 `json:"totalincome"`
+	TotalExpense float64 `json:"totalexpense"`
+	TotalBoth float64 `json:"totalboth"`
+}
+
 type Response struct{
 	Success bool `json:"success"`
 	Message string `json:"message"`
@@ -57,8 +63,6 @@ func dbInit(){
 	}else{
 		log.Print("succesfully create table")
 	}
-
-
 }
 
 func handleFrontendData(w http.ResponseWriter, r *http.Request){
@@ -116,7 +120,7 @@ func getData(w http.ResponseWriter, r *http.Request){
 	var data []DailyData
 	for dataUser.Next() {
 		var d DailyData
-		err := dataUser.Scan(&d.Id,&d.Date, &d.Income, &d.Expense, &d.Category, &d.Note)
+		err = dataUser.Scan(&d.Id,&d.Date, &d.Income, &d.Expense, &d.Category, &d.Note)
 		if err != nil {
 			http.Error(w, "Error scanning data", http.StatusInternalServerError)
 			return
@@ -125,6 +129,27 @@ func getData(w http.ResponseWriter, r *http.Request){
 	}
 
 	json.NewEncoder(w).Encode(data)
+}
+
+func getTotalData(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+	w.Header().Set("Acesss-Control-Allow-Headers","Content-Type")
+
+	var err error
+	var total totalData
+	var row = db.QueryRow(`
+        SELECT 
+            SUM(CAST(income AS DECIMAL)) AS total_income,
+            SUM(CAST(expense AS DECIMAL)) AS total_expense,
+            SUM(CAST(income AS DECIMAL)) - SUM(CAST(expense AS DECIMAL)) AS total_both
+        FROM daily_data
+    `)
+	
+    if err = row.Scan(&total.TotalIncome, &total.TotalExpense, &total.TotalBoth); err != nil {
+        panic(err)
+    }
+	
+	json.NewEncoder(w).Encode(total)
 }
 
 func handleDelete(w http.ResponseWriter, r *http.Request){
@@ -149,7 +174,33 @@ func handleDelete(w http.ResponseWriter, r *http.Request){
 	} 
 	json.NewEncoder(w).Encode(response)
 }
+func handleEdit(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Methods", "PATCH")
 
+
+	var updatedData DailyData
+	err := json.NewDecoder(r.Body).Decode(&updatedData)
+	if err != nil{
+		log.Print("error WOI")
+	}
+	_, err = db.Query("UPDATE daily_data SET date=$1, income=$2, expense=$3, category=$4, note=$5 WHERE id=$6",&updatedData.Date,&updatedData.Income,&updatedData.Expense,&updatedData.Category,&updatedData.Note,&updatedData.Id)
+	if err != nil{
+		log.Print("tai")
+
+		response := Response {
+			Success: false,
+			Message: "error anjeng",
+		}
+		json.NewEncoder(w).Encode(response)
+	}
+	response := Response{
+		Success: true,
+		Message: "asu tai babi anjeng",
+	}
+	json.NewEncoder(w).Encode(response)
+}
 func main(){
 	dbInit()
 	fmt.Print("Db init.......")
@@ -157,7 +208,8 @@ func main(){
 	http.HandleFunc("/api/userData", handleFrontendData)
 	http.HandleFunc("/api/getData", getData)
 	http.HandleFunc("/api/deleteData",handleDelete)
-
+	http.HandleFunc("/api/editData", handleEdit)
+	http.HandleFunc("/api/getData/total", getTotalData)
 
 	log.Print("port in 8080")
 	log.Fatal(http.ListenAndServe(":8080",nil))
