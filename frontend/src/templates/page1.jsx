@@ -54,16 +54,16 @@ export default function Page1() {
               <p className="grow mt-[6px]"> {item.date}</p>
             </div>
             <div className="text-black bg-white p-2 m-2 rounded-md">
-              Rp {parseInt(item.income).toLocaleString("id-ID")}
+              Rp {(item.income)}
             </div>
             <div className="text-black bg-white p-2 m-2 rounded-md">
-              Rp {parseInt(item.expense).toLocaleString("id-ID")}
+              Rp {(item.expense)}
             </div>
             <div className="bg-white p-2 m-2 rounded-md">{item.category}</div>
             <div className="bg-white p-2 m-2 rounded-md">
               Rp{" "}
               {parseInt(item.income) -
-                parseInt(item.expense).toLocaleString("id-ID")}
+                parseInt(item.expense)}
             </div>
           </div>
         ))}
