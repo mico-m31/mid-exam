@@ -14,13 +14,19 @@ type DailyData struct {
 	Income string `json:"income"`
 	Expense string `json:"expense"`
 	Category string `json:"category"`
-	Note string `json:"note"`
 }
 
 type totalData struct{
 	TotalIncome float64 `json:"totalincome"`
 	TotalExpense float64 `json:"totalexpense"`
 	TotalBoth float64 `json:"totalboth"`
+}
+
+type categoryData struct{
+	Totalfood float64 `json:"totalfood"`
+	Totalgrocery float64 `json:"totalgrocery"`
+	Totaltransport float64 `json:"totaltransport"`
+	Totalother float64 `json:"totalother"`
 }
 
 type Response struct{
@@ -42,7 +48,7 @@ func dbInit(){
 	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",host,port,user,password,dbName)
 	db,err = sql.Open("postgres", psqlInfo)
 	if err != nil{
-		log.Print("buadjingan error")
+		log.Print("error db connec")
 		panic(err)
 	}
 	log.Print(db.Ping())
@@ -53,8 +59,7 @@ func dbInit(){
 		date VARCHAR(100),
 		income INT,
 		expense INT,
-		category VARCHAR(100),
-		note VARCHAR(250)
+		category VARCHAR(100)
 	);`
 
 	_,err= db.Exec(createTable)
@@ -66,7 +71,7 @@ func dbInit(){
 }
 
 func handleFrontendData(w http.ResponseWriter, r *http.Request){
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:4173")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
 	if r.Method == "OPTIONS" {
@@ -81,21 +86,21 @@ func handleFrontendData(w http.ResponseWriter, r *http.Request){
 	var data DailyData
 	err := json.NewDecoder(r.Body).Decode(&data)
 	if err != nil{
-		http.Error(w, "error wak walawe", http.StatusBadRequest)
+		http.Error(w, "error decode json: ", http.StatusBadRequest)
 		return
 	}
 
 
-	fmt.Println("Received:", data.Date, data.Income, data.Expense, data.Category, data.Note)
+	fmt.Println("Received:", data.Date, data.Income, data.Expense, data.Category)
 
-	_, err = db.Exec("INSERT INTO daily_data(date,income,expense,category,note) VALUES ($1,$2,$3,$4,$5)",data.Date,data.Income,data.Expense,data.Category,data.Note)
+	_, err = db.Exec("INSERT INTO daily_data(date,income,expense,category) VALUES ($1,$2,$3,$4)",data.Date,data.Income,data.Expense,data.Category)
 	if err != nil{
 		response := Response{
 			Success: false,
 			Message: "Data input error",
 	}
 		json.NewEncoder(w).Encode(response)
-		log.Print("wasu error input tabel walawe")
+		log.Print("query error")
 		return
 	}
 
@@ -107,10 +112,10 @@ func handleFrontendData(w http.ResponseWriter, r *http.Request){
 }
 
 func getData(w http.ResponseWriter, r *http.Request){
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:4173")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-	dataUser,err := db.Query("SELECT id,date,income,expense,category,note FROM daily_data")
+	dataUser,err := db.Query("SELECT id,date,income,expense,category FROM daily_data ORDER BY date ASC")
 	if err != nil{
 		panic(err)
 	}
@@ -120,7 +125,7 @@ func getData(w http.ResponseWriter, r *http.Request){
 	var data []DailyData
 	for dataUser.Next() {
 		var d DailyData
-		err = dataUser.Scan(&d.Id,&d.Date, &d.Income, &d.Expense, &d.Category, &d.Note)
+		err = dataUser.Scan(&d.Id,&d.Date, &d.Income, &d.Expense, &d.Category)
 		if err != nil {
 			http.Error(w, "Error scanning data", http.StatusInternalServerError)
 			return
@@ -132,7 +137,7 @@ func getData(w http.ResponseWriter, r *http.Request){
 }
 
 func getTotalData(w http.ResponseWriter, r *http.Request){
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:4173")
 	w.Header().Set("Acesss-Control-Allow-Headers","Content-Type")
 
 	var err error
@@ -152,8 +157,45 @@ func getTotalData(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(total)
 }
 
+func getCategoryData(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:4173")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	var categoryDatas categoryData
+	row, err := db.Query("SELECT category, count(*) from daily_data group by category")
+	if err != nil {
+		log.Print(err)
+	}
+	var category string
+	var count float64
+	for row.Next(){
+		err := row.Scan(&category, &count)
+		if err != nil {
+			log.Print(err)
+			continue
+		}
+
+		switch category {
+		case "food":
+			categoryDatas.Totalfood = count
+		case "grocery":
+			categoryDatas.Totalgrocery = count
+		case "transport":
+			categoryDatas.Totaltransport = count
+		case "other":
+			categoryDatas.Totalother = count
+		default:
+			log.Printf("Unknown category: %s", category)
+		}
+	}
+	if err = row.Scan(&categoryDatas.Totalfood,&categoryDatas.Totalgrocery,&categoryDatas.Totaltransport,&categoryDatas.Totalother); err != nil{
+		log.Print(err)
+	}
+	json.NewEncoder(w).Encode(categoryDatas)
+}
+
 func handleDelete(w http.ResponseWriter, r *http.Request){
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:4173")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Methods", "DELETE")
 
@@ -175,7 +217,7 @@ func handleDelete(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(response)
 }
 func handleEdit(w http.ResponseWriter, r *http.Request){
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:4173")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Methods", "PATCH")
 
@@ -183,21 +225,21 @@ func handleEdit(w http.ResponseWriter, r *http.Request){
 	var updatedData DailyData
 	err := json.NewDecoder(r.Body).Decode(&updatedData)
 	if err != nil{
-		log.Print("error WOI")
+		log.Print("error decode json")
 	}
-	_, err = db.Query("UPDATE daily_data SET date=$1, income=$2, expense=$3, category=$4, note=$5 WHERE id=$6",&updatedData.Date,&updatedData.Income,&updatedData.Expense,&updatedData.Category,&updatedData.Note,&updatedData.Id)
+	_, err = db.Query("UPDATE daily_data SET date=$1, income=$2, expense=$3, category=$4, WHERE id=$6",&updatedData.Date,&updatedData.Income,&updatedData.Expense,&updatedData.Category,&updatedData.Id)
 	if err != nil{
-		log.Print("tai")
+		log.Print("error update query")
 
 		response := Response {
 			Success: false,
-			Message: "error anjeng",
+			Message: "error update query",
 		}
 		json.NewEncoder(w).Encode(response)
 	}
 	response := Response{
 		Success: true,
-		Message: "asu tai babi anjeng",
+		Message: "data update successfully",
 	}
 	json.NewEncoder(w).Encode(response)
 }
@@ -210,6 +252,7 @@ func main(){
 	http.HandleFunc("/api/deleteData",handleDelete)
 	http.HandleFunc("/api/editData", handleEdit)
 	http.HandleFunc("/api/getData/total", getTotalData)
+	http.HandleFunc("/api/getCategory", getCategoryData)
 
 	log.Print("port in 8080")
 	log.Fatal(http.ListenAndServe(":8080",nil))

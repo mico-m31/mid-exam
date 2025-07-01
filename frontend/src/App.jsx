@@ -1,5 +1,12 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Link,
+  useLocation,
+} from "react-router-dom";
+import LandingPage from "./templates/landingPage";
 import Page1 from "./templates/page1";
 import Page2 from "./templates/page2";
 
@@ -7,17 +14,17 @@ function Navbar() {
   return (
     <>
       <div className="p-2 bg-white border-b border-neutral-200">
-        
-        <nav className="flex flex-row-reverse transition-all duration-300">
-          <ul className="flex border-black">
-            <li className="p-3 border-b-2 border-transparent cursor-pointer hover:bg-gray-100 hover:border-b-2 hover:border-black active:text-white">Money Manager</li>
-            <li className="p-3 cursor-pointer hover:bg-gray-100 hover:border-b-2  hover:border-black active:text-white">
-              <Link to="/">Calendar</Link>
+        <nav className="flex transition-all duration-300 justify-between items-center ">
+          <ul className="flex">
+            <li className="p-3  cursor-pointer active:text-white flex-none">
+              <span>Money Manager</span>
             </li>
-            <li className="p-3 cursor-pointer hover:bg-gray-100 hover:border-b-2 hover:border-black active:text-white">
-              <Link to="/daily">Daily</Link>
+          </ul>
+          <ul className="flex items-center">
+            <li className="p-2 cursor-pointer border-b-2 border-transparent hover:border-b-2 hover:border-blue-400 active:text-white">
+                <Link to="/daily">Daily</Link>
             </li>
-            <li className="p-3 cursor-pointer hover:bg-gray-100 hover:border-b-2 hover:border-black active:text-white">
+            <li className="p-2 cursor-pointer border-b-2 border-transparent hover:border-b-2 hover:border-blue-400 active:text-white">
               <Link to="/stats">Stats</Link>
             </li>
           </ul>
@@ -26,28 +33,27 @@ function Navbar() {
     </>
   );
 }
-
-function App() {
-
+function AppContent() {
+  const location = useLocation();
+  const showNavbar =
+    location.pathname === "/daily" || location.pathname === "/stats";
 
   return (
+    <div className="bg-black min-h-screen">
+      { showNavbar && <Navbar />}
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/daily" element={<Page1 />} />
+        <Route path="/stats" element={<Page2 />} />
+        
+      </Routes>
+    </div>
+  );
+}
+function App() {
+  return (
     <Router>
-      <div className="bg-black min-h-screen">
-        <Navbar
-    
-        />
-
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <Page1
-              />
-            }
-          />
-          <Route path="/daily" element={<Page2 />} />
-        </Routes>
-      </div>
+      <AppContent />
     </Router>
   );
 }

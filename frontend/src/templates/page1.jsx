@@ -1,116 +1,22 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus, CircleX } from "lucide-react";
 import Button from "@mui/material/Button";
 
-
-  
 export default function Page1() {
-
   const [formMode, setformMode] = useState(null);
   const [data, setData] = useState([]);
   const [editingItem, setEditingItem] = useState(null);
-  const [total, setTotal] = useState([])
+  const [total, setTotal] = useState([]);
 
   useEffect(() => {
-  if (formMode === "edit" && editingItem) {
-    updatedDate.current.value = editingItem.date;
-    updatedIncome.current.value = editingItem.income;
-    updatedExpense.current.value = editingItem.expense;
-    updatedcategory.current.value = editingItem.category;
-    updatedNote.current.value = editingItem.note;
-  }
-}, [formMode, editingItem]);
+    if (formMode === "edit" && editingItem) {
+      updatedDate.current.value = editingItem.date;
+      updatedIncome.current.value = editingItem.income;
+      updatedExpense.current.value = editingItem.expense;
+      updatedcategory.current.value = editingItem.category;
 
-  function DataCard({ data, onDelete }) {
-    if (!data){
-     <div>No data entries</div>     
-    }else{
-    return (
-      <>
-        {data.map((item) => (
-          <div key={item.id} className="grid grid-cols-5 text-center p-4">
-            <div className="bg-white p-2 m-2 rounded-md  flex">
-              <Button
-                variant="outlined"
-                type="submit "
-                className="flex-none"
-                onClick={() => onDelete(item.id)}
-              >
-                del
-              </Button>
-              <Button
-                variant="outlined"
-                type="submit"
-                className="flex-none"
-                onClick={() => {
-                  setEditingItem(item);  
-                  setformMode("edit"); 
-                  
-                }}
-              >
-                edit
-              </Button>
-
-              <p className="grow mt-[6px]"> {item.date}</p>
-            </div>
-            <div className="text-black bg-white p-2 m-2 rounded-md">
-              Rp {(item.income)}
-            </div>
-            <div className="text-black bg-white p-2 m-2 rounded-md">
-              Rp {(item.expense)}
-            </div>
-            <div className="bg-white p-2 m-2 rounded-md">{item.category}</div>
-            <div className="bg-white p-2 m-2 rounded-md">
-              Rp{" "}
-              {parseInt(item.income) -
-                parseInt(item.expense)}
-            </div>
-          </div>
-        ))}
-      </>
-    );
-  }
-}
-
-  const date = useRef();
-  const income = useRef();
-  const expense = useRef();
-  const category = useRef();
-  const note = useRef();
-  const updatedDate = useRef();
-  const updatedIncome = useRef();
-  const updatedExpense = useRef();
-  const updatedcategory = useRef();
-  const updatedNote = useRef();
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const data = {
-      date: date.current.value,
-      income: income.current.value,
-      expense: expense.current.value,
-      category: category.current.value,
-      note: note.current.value,
-    };
-    console.log("Sending data:", data);
-
-    fetch("http://localhost:8080/api/userData", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    })
-      .then((res) => res.json())
-      .then((result) => {
-        console.log("Data sent successfully:", result);
-        alert("data submitted!");
-        setformMode(null);
-      })
-      .catch((err) => {
-        console.error("Error sending data:", err);
-      });
-  };
+    }
+  }, [formMode, editingItem]);
 
   useEffect(() => {
     fetch("http://localhost:8080/api/getData")
@@ -126,15 +32,53 @@ export default function Page1() {
 
   useEffect(() => {
     fetch("http://localhost:8080/api/getData/total")
-    .then((res) => res.json())
-    .then((data) => {
-      console.log("getting total", data);
-      setTotal(data);
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("getting total", data);
+        setTotal(data);
+      })
+      .catch((err) => {
+        console.error("error getting total data:", err);
+      });
+  }, []);
+
+  const date = useRef();
+  const income = useRef();
+  const expense = useRef();
+  const category = useRef();
+  const updatedDate = useRef();
+  const updatedIncome = useRef();
+  const updatedExpense = useRef();
+  const updatedcategory = useRef();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const data = {
+      date: date.current.value,
+      income: income.current.value,
+      expense: expense.current.value,
+      category: category.current.value,
+    };
+    console.log("Sending data:", data);
+
+    fetch("http://localhost:8080/api/userData", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
     })
-    .catch((err) => {
-      console.error("error getting total data:", err)
-    });
-  }, [])
+      .then((res) => res.json())
+      .then((result) => {
+        console.log("Data sent successfully:", result);
+        alert("data input sucess!");
+        setformMode(null);
+        window.location.reload();
+      })
+      .catch((err) => {
+        console.error("Error sending data:", err);
+      });
+  };
 
   const handleUpdateData = (e) => {
     e.preventDefault();
@@ -144,25 +88,24 @@ export default function Page1() {
       income: updatedIncome.current.value,
       expense: updatedExpense.current.value,
       category: updatedcategory.current.value,
-      note: updatedNote.current.value,
     };
-    fetch(
-      "http://localhost:8080/api/editData",
-      {
-        method: "PATCH",
-        header: {
-          "Contet-Type": "application,json",
-        },
-        body: JSON.stringify(dataUpdated),
+    fetch("http://localhost:8080/api/editData", {
+      method: "PATCH",
+      header: {
+        "Contet-Type": "application,json",
+      },
+      body: JSON.stringify(dataUpdated),
+    })
+      .then((res) => res.json())
+      .then((result) => {
+        console.log("Data update successfully:", result);
+        alert("data updated");
+        setformMode(null);
+        window.location.reload();
       })
-        .then((res) => res.json())
-        .then((result) => {
-          console.log("Data update successfully:", result);
-          alert("data updated");
-        })
-        .catch((err) => {
-          console.error("error updating data:", err);
-        });
+      .catch((err) => {
+        console.error("error updating data:", err);
+      });
   };
 
   const handleDelete = (id) => {
@@ -182,7 +125,64 @@ export default function Page1() {
         console.error("Delete failed:", err);
       });
   };
+  
 
+  function DataCard({ data, onDelete }) {
+    if (!data) {
+      <div>No data entries</div>;
+    } else {
+      return (
+        <>
+          {data.map((item) => (
+            <div key={item.id} className="grid grid-cols-5 text-center p-4">
+              <div className="bg-white p-2   flex">
+                <Button
+                  variant="outlined"
+                  type="submit "
+                  className="flex-none"
+                  onClick={() => onDelete(item.id)}
+                >
+                  del
+                </Button>
+                <Button
+                  variant="outlined"
+                  type="submit"
+                  className="flex-none"
+                  onClick={() => {
+                    setEditingItem(item);
+                    setformMode("edit");
+                  }}
+                >
+                  edit
+                </Button>
+
+                <p className="grow mt-[6px]"> {item.date}</p>
+              </div>
+              <div className="text-black bg-white p-2 ">
+                <p className="mt-[6px]"> Rp {item.income}</p>
+              </div>
+              <div className="text-black bg-white p-2 ">
+                <p className="mt-[6px]"> Rp {item.expense}</p>
+              </div>
+              <div className="bg-white p-2 ">
+                <p className="mt-[6px]">{item.category}</p>
+              </div>
+              <div className="bg-white p-2">
+                <p className="mt-[6px]">
+                  Rp {parseInt(item.income) - parseInt(item.expense)}
+                </p>
+              </div>
+              <hr className="border-b-5 border-blue-200"></hr>
+              <hr className="border-b-5 border-blue-200"></hr>
+              <hr className="border-b-5 border-blue-200"></hr>
+              <hr className="border-b-5 border-blue-200"></hr>
+              <hr className="border-b-5 border-blue-200"></hr>
+            </div>
+          ))}
+        </>
+      );
+    }
+  }
   return (
     <div>
       <ul className="text-black grid grid-cols-3 p-2 text-center">
@@ -190,7 +190,7 @@ export default function Page1() {
         <li className="p-4 text-red-400">Expense</li>
         <li className="p-4 text-blue-400">Total</li>
         <li className="text-green-400">Rp {total.totalincome}</li>
-        <li className="text-red-400">Rp  {total.totalexpense}</li>
+        <li className="text-red-400">Rp {total.totalexpense}</li>
         <li className="text-blue-400">Rp {total.totalboth}</li>
       </ul>
       <hr></hr>
@@ -212,72 +212,65 @@ export default function Page1() {
         className={`flex justify-center mt-[50px] ${formMode ? "" : "hidden"}`}
       >
         {formMode === "create" && (
-          <div className="bg-white border rounded-lg p-6 w-1/3 shadow-md relative">
-            <button
-              className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
-              onClick={() => setformMode(null)}
-            >
-              <CircleX size={24} />
-            </button>
+          <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex justify-center items-center">
+            <div className="bg-white border rounded-lg p-6 w-1/3 shadow-md relative">
+              <button
+                className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
+                onClick={() => setformMode(null)}
+              >
+                <CircleX size={24} className="cursor-pointer" />
+              </button>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <label className="flex flex-col text-sm font-medium">
-                Date:
-                <input
-                  type="date"
-                  className="border rounded px-3 py-2 mt-1"
-                  ref={date}
-                />
-              </label>
+              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                <label className="flex flex-col text-sm font-medium">
+                  Date:
+                  <input
+                    type="date"
+                    className="border rounded px-3 py-2 mt-1"
+                    ref={date}
+                  />
+                </label>
 
-              <label className="flex flex-col text-sm font-medium">
-                Income:
-                <input
-                  type="text"
-                  className="border rounded px-3 py-2 mt-1"
-                  ref={income}
-                />
-              </label>
+                <label className="flex flex-col text-sm font-medium">
+                  Income:
+                  <input
+                    type="text"
+                    className="border rounded px-3 py-2 mt-1"
+                    ref={income}
+                  />
+                </label>
 
-              <label className="flex flex-col text-sm font-medium">
-                Expense:
-                <input
-                  type="text"
-                  className="border rounded px-3 py-2 mt-1"
-                  ref={expense}
-                />
-              </label>
+                <label className="flex flex-col text-sm font-medium">
+                  Expense:
+                  <input
+                    type="text"
+                    className="border rounded px-3 py-2 mt-1"
+                    ref={expense}
+                  />
+                </label>
 
-              <label className="flex flex-col text-sm font-medium">
-                Category:
-                <select
-                  ref={category}
-                  className="border rounded px-3 py-2 mt-1 cursor-pointer"
-                  defaultValue=""
-                >
-                  <option value="" disabled>
-                    -- Select Category --
-                  </option>
-                  <option value="food">Food</option>
-                  <option value="transport">Transport</option>
-                  <option value="grocery">Grocery</option>
-                  <option value="other">Other</option>
-                </select>
-              </label>
+                <label className="flex flex-col text-sm font-medium">
+                  Category:
+                  <select
+                    ref={category}
+                    className="border rounded px-3 py-2 mt-1 cursor-pointer"
+                    defaultValue=""
+                  >
+                    <option value="" disabled>
+                      -- Select Category --
+                    </option>
+                    <option value="food">Food</option>
+                    <option value="transport">Transport</option>
+                    <option value="grocery">Grocery</option>
+                    <option value="other">Other</option>
+                  </select>
+                </label>
 
-              <label className="flex flex-col text-sm font-medium">
-                Note:
-                <input
-                  type="text"
-                  className="border rounded px-3 py-2 mt-1"
-                  ref={note}
-                />
-              </label>
-
-              <Button variant="outlined" type="submit">
-                Submit
-              </Button>
-            </form>
+                <Button variant="outlined" type="submit">
+                  Submit
+                </Button>
+              </form>
+            </div>
           </div>
         )}
       </div>
@@ -291,14 +284,13 @@ export default function Page1() {
       </button>
 
       {formMode === "edit" && (
-        <div className="flex justify-center mt-[50px]">
+        <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex justify-center items-center">
           <div className="bg-white border rounded-lg p-6 w-1/3 shadow-md relative">
             <button
-              type="button"
+              className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
               onClick={() => setformMode(null)}
-              className="absolute top-2 right-2 text-gray-500 hover:text-black"
             >
-              <CircleX size={24} />
+              <CircleX size={24} className="cursor-pointer" />
             </button>
 
             <form onSubmit={handleUpdateData} className="flex flex-col gap-4">
@@ -344,15 +336,6 @@ export default function Page1() {
                   <option value="grocery">Grocery</option>
                   <option value="other">Other</option>
                 </select>
-              </label>
-
-              <label className="flex flex-col text-sm font-medium">
-                Note:
-                <input
-                  type="text"
-                  className="border rounded px-3 py-2 mt-1"
-                  ref={updatedNote}
-                />
               </label>
 
               <Button variant="outlined" type="submit">
