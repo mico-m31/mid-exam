@@ -7,7 +7,6 @@ export default function Page1() {
   const [data, setData] = useState([]);
   const [editingItem, setEditingItem] = useState(null);
   const [total, setTotal] = useState([]);
-
   useEffect(() => {
     if (formMode === "edit" && editingItem) {
       updatedDate.current.value = editingItem.date;
@@ -59,6 +58,10 @@ export default function Page1() {
       expense: expense.current.value,
       category: category.current.value,
     };
+    if (!data.date || !data.income || !data.expense || !data.category) {
+      alert("Please fill in all fields");
+      return;
+    }
     console.log("Sending data:", data);
 
     fetch("http://localhost:8080/api/userData", {
@@ -89,10 +92,14 @@ export default function Page1() {
       expense: updatedExpense.current.value,
       category: updatedcategory.current.value,
     };
+      if (!dataUpdated.date || !dataUpdated.income || !dataUpdated.expense || !dataUpdated.category) {
+      alert("Please fill in all fields");
+      return;
+    }
     fetch("http://localhost:8080/api/editData", {
       method: "PATCH",
       header: {
-        "Contet-Type": "application,json",
+        "Contet-Type": "application/json",
       },
       body: JSON.stringify(dataUpdated),
     })
@@ -117,9 +124,11 @@ export default function Page1() {
       body: JSON.stringify({ id: id }),
     })
       .then((res) => res.json())
-      .then((result) => {
+      .then((result) => { 
+        window.location.reload();
         console.log("Deleted:", result);
         setData((prevData) => prevData.filter((item) => item.id !== id));
+       
       })
       .catch((err) => {
         console.error("Delete failed:", err);
@@ -228,6 +237,7 @@ export default function Page1() {
                     type="date"
                     className="border rounded px-3 py-2 mt-1"
                     ref={date}
+                    required
                   />
                 </label>
 
@@ -237,6 +247,7 @@ export default function Page1() {
                     type="text"
                     className="border rounded px-3 py-2 mt-1"
                     ref={income}
+                    required
                   />
                 </label>
 
@@ -246,6 +257,7 @@ export default function Page1() {
                     type="text"
                     className="border rounded px-3 py-2 mt-1"
                     ref={expense}
+                    required
                   />
                 </label>
 
@@ -255,6 +267,7 @@ export default function Page1() {
                     ref={category}
                     className="border rounded px-3 py-2 mt-1 cursor-pointer"
                     defaultValue=""
+                    required
                   >
                     <option value="" disabled>
                       -- Select Category --
@@ -300,6 +313,7 @@ export default function Page1() {
                   type="date"
                   className="border rounded px-3 py-2 mt-1"
                   ref={updatedDate}
+                  required
                 />
               </label>
 
@@ -309,6 +323,7 @@ export default function Page1() {
                   type="text"
                   className="border rounded px-3 py-2 mt-1"
                   ref={updatedIncome}
+                  required
                 />
               </label>
 
@@ -318,6 +333,7 @@ export default function Page1() {
                   type="text"
                   className="border rounded px-3 py-2 mt-1"
                   ref={updatedExpense}
+                  required
                 />
               </label>
 
@@ -327,6 +343,7 @@ export default function Page1() {
                   ref={updatedcategory}
                   className="border rounded px-3 py-2 mt-1 cursor-pointer"
                   defaultValue=""
+                  required
                 >
                   <option value="" disabled>
                     -- Select Category --
