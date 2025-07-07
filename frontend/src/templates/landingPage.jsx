@@ -29,7 +29,7 @@ export default function LandingPage() {
       <footer className="bg-black/30 backdrop-blur-sm mt-66 ">
         <div className="container  px-6">
           <div className="border-t border-white/10 p-4 text-center text-white/60 ">
-            <p>&copy; 2025. All rights reserved.</p>
+            <p>&copy; 2025 All rights reserved.</p>
           </div>
         </div>
       </footer>
